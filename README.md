@@ -209,3 +209,166 @@ src/
                     └── service/
                         ├── impl/
                         └── security/
+## Authentication & Authorization
+
+The application uses Spring Security with JWT-based stateless authentication.
+
+### Authentication Flow
+
+```text
+User
+ |
+ | Username + Password
+ v
+POST /api/auth/login
+ |
+ v
+AuthenticationManager
+ |
+ v
+CustomUserDetailsService
+ |
+ v
+BCrypt Password Verification
+ |
+ v
+JWT Token Generation
+ |
+ v
+Client
+
+User
+  |
+  | Many-to-Many
+  v
+Role
+  |
+  | Many-to-Many
+  v
+Permission
+
+## Main Modules
+
+### 1. Product & Category Management
+
+Manages product categories and product information including SKU, pricing, status, and category relationships.
+
+### 2. Inventory Management
+
+Tracks current stock levels and maintains a history of stock movements such as purchases, sales, damages, and manual adjustments.
+
+### 3. Supplier & Purchase Management
+
+Manages suppliers and purchase transactions. Receiving a purchase automatically increases the corresponding inventory stock.
+
+### 4. Customer & Order Management
+
+Manages customers and sales orders with order status handling, stock validation, stock deduction, and stock restoration when applicable.
+
+### 5. POS & Billing
+
+Processes sales transactions, records payments, generates invoices, and updates inventory within a transactional workflow.
+
+### 6. Reports & Dashboard
+
+Provides business information including sales, purchases, inventory status, low-stock items, and dashboard summaries.
+
+### 7. Audit Logging
+
+Records important system activities including the user, action, affected entity, entity ID, description, and timestamp.
+
+## Getting Started
+
+### Prerequisites
+
+Make sure the following are installed:
+
+- Java 21
+- Docker
+- Docker Compose
+- Git
+
+### Environment Variables
+
+Create a `.env` file in the project root directory.
+
+Example:
+
+```env
+POSTGRES_DB=business_management
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_database_password
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRATION=3600000
+
+## API Overview
+
+The application exposes RESTful APIs for the following business operations:
+
+| Module | Endpoint | Description |
+|---|---|---|
+| Authentication | `/api/auth` | User registration and login |
+| Products | `/api/products` | Product management |
+| Categories | `/api/categories` | Category management |
+| Inventory | `/api/inventory` | Stock management and stock movements |
+| Suppliers | `/api/suppliers` | Supplier management |
+| Purchases | `/api/purchases` | Purchase management |
+| Customers | `/api/customers` | Customer management |
+| Orders | `/api/orders` | Order management |
+| POS | `/api/pos` | Sales and billing |
+| Reports | `/api/reports` | Business reports |
+| Dashboard | `/api/dashboard` | Dashboard summaries |
+| Audit | `/api/audit` | Audit log access |
+
+Most business endpoints require JWT authentication.
+
+API requests can be tested using Swagger UI or an API client such as Postman.
+
+## Testing
+
+The application uses JUnit and Mockito for unit testing.
+
+### Testing Approach
+
+Service-layer business logic is tested using:
+
+- JUnit 5
+- Mockito
+- Spring Boot Test
+
+Unit tests focus on validating business rules and service behavior without requiring a real database.
+
+### Current Test Coverage
+
+The current test suite includes unit tests for product management services, including:
+
+- Product creation
+- Duplicate SKU validation
+- Business rule validation
+
+Additional tests can be added as the application evolves.
+
+## Future Improvements
+
+The following improvements can be considered for future versions of the system:
+
+- Angular-based frontend application
+- Role and permission management UI
+- Advanced reporting and analytics
+- Redis caching
+- Real-time notifications using WebSocket
+- Automated CI/CD pipeline
+- Improved test coverage across all service modules
+- Production-ready deployment and cloud infrastructure
+
+## Project Status
+
+The backend implementation is complete and includes the core business operations, authentication, authorization, inventory management, purchasing, sales, billing, reporting, and audit logging features.
+
+The project is currently maintained as a backend-focused portfolio project and is available as a professional GitHub repository.
+
+The Angular frontend is planned as a future improvement.
+
+## License
+
+This project is developed for educational and portfolio purposes.
