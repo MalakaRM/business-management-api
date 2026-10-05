@@ -41,7 +41,7 @@ public class SupplierServiceImpl implements SupplierService {
     @Transactional(readOnly = true)
     public Page<SupplierResponse> getAllSuppliers(Pageable pageable) {
         return supplierRepository
-                .findAll(pageable)
+                .findAllByOrderByIdAsc(pageable)
                 .map(supplierMapper::toResponse);
     }
 

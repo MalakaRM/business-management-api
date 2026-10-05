@@ -28,6 +28,9 @@ public record RegisterRequest(
                 max = 100,
                 message = "Password must be between 8 and 100 characters"
         )
-        String password
+        String password,
+
+        @NotBlank(message = "Role is required")
+        String role
 ) {
 }

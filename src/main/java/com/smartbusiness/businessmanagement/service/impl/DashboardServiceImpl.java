@@ -2,15 +2,15 @@ package com.smartbusiness.businessmanagement.service.impl;
 
 import com.smartbusiness.businessmanagement.dto.response.DashboardResponse;
 import com.smartbusiness.businessmanagement.entity.enums.OrderStatus;
-import com.smartbusiness.businessmanagement.entity.enums.PurchaseStatus;
 import com.smartbusiness.businessmanagement.repository.CustomerRepository;
 import com.smartbusiness.businessmanagement.repository.InventoryRepository;
 import com.smartbusiness.businessmanagement.repository.OrderRepository;
 import com.smartbusiness.businessmanagement.repository.ProductRepository;
-import com.smartbusiness.businessmanagement.repository.PurchaseRepository;
 import com.smartbusiness.businessmanagement.repository.SupplierRepository;
 import com.smartbusiness.businessmanagement.service.DashboardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +26,6 @@ public class DashboardServiceImpl implements DashboardService {
     private final SupplierRepository supplierRepository;
     private final InventoryRepository inventoryRepository;
     private final OrderRepository orderRepository;
-    private final PurchaseRepository purchaseRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -34,37 +33,42 @@ public class DashboardServiceImpl implements DashboardService {
 
         LocalDate today = LocalDate.now();
 
-        long totalProducts =
-                productRepository.countByActiveTrue();
+        Long totalProducts = hasPermission("PRODUCT_READ")
+                ? productRepository.countByActiveTrue()
+                : null;
 
-        long totalCustomers =
-                customerRepository.countByActiveTrue();
+        Long totalCustomers = hasPermission("CUSTOMER_READ")
+                ? customerRepository.countByActiveTrue()
+                : null;
 
-        long totalSuppliers =
-                supplierRepository.countByActiveTrue();
+        Long totalSuppliers = hasPermission("SUPPLIER_READ")
+                ? supplierRepository.countByActiveTrue()
+                : null;
 
-        long currentStock =
-                inventoryRepository.getCurrentStock();
+        Long currentStock = hasPermission("INVENTORY_READ")
+                ? inventoryRepository.getCurrentStock()
+                : null;
 
-        long lowStockCount =
-                inventoryRepository.countLowStock();
+        Long lowStockCount = hasPermission("INVENTORY_READ")
+                ? inventoryRepository.countLowStock()
+                : null;
 
-        long pendingOrders =
-                orderRepository.countByStatus(OrderStatus.PENDING);
+        Long pendingOrders = hasPermission("ORDER_READ")
+                ? orderRepository.countByStatus(OrderStatus.PENDING)
+                : null;
 
-        BigDecimal todaySales =
-                orderRepository.getTotalByStatusAndDate(
-                        OrderStatus.CONFIRMED,
-                        today
-                );
+        BigDecimal todaySales = hasPermission("ORDER_READ")
+                ? orderRepository.getTotalByStatusAndDate(
+                OrderStatus.CONFIRMED,
+                today
+        )
+                : null;
 
-        BigDecimal todayPurchases =
-                purchaseRepository.getTotalByStatusAndDate(
-                        PurchaseStatus.RECEIVED,
-                        today
-                );
-
-        BigDecimal revenue = todaySales;
+        BigDecimal revenue = hasPermission("REPORT_READ")
+                ? orderRepository.getTotalByStatus(
+                OrderStatus.CONFIRMED
+        )
+                : null;
 
         return new DashboardResponse(
                 totalProducts,
@@ -74,8 +78,25 @@ public class DashboardServiceImpl implements DashboardService {
                 lowStockCount,
                 pendingOrders,
                 todaySales,
-                todayPurchases,
                 revenue
         );
+    }
+
+    private boolean hasPermission(String permission) {
+
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        if (authentication == null) {
+            return false;
+        }
+
+        return authentication.getAuthorities()
+                .stream()
+                .anyMatch(authority ->
+                        authority.getAuthority().equals(permission)
+                );
     }
 }

@@ -9,6 +9,8 @@ import com.smartbusiness.businessmanagement.dto.response.ApiResponse;
 import com.smartbusiness.businessmanagement.service.InventoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -109,5 +111,63 @@ public class InventoryController {
                         "Stock adjusted successfully",
                         response
                 ));
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('INVENTORY_READ')")
+    public ResponseEntity<ApiResponse<Page<InventoryResponse>>> getAllInventory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<InventoryResponse> response =
+                inventoryService.getAllInventory(page, size);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Inventory retrieved successfully",
+                        response
+                )
+        );
+    }
+    @GetMapping("/report/inventory")
+    @PreAuthorize("hasAuthority('INVENTORY_READ')")
+    public ResponseEntity<ApiResponse<Page<InventoryResponse>>> getInventoryReport(
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+
+        Page<InventoryResponse> response =
+                inventoryService.searchInventoryReport(
+                        search.trim(),
+                        PageRequest.of(page, size)
+                );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Inventory report retrieved successfully",
+                        response
+                )
+        );
+    }
+    @GetMapping("/report/low-stock")
+    @PreAuthorize("hasAuthority('INVENTORY_READ')")
+    public ResponseEntity<ApiResponse<Page<InventoryResponse>>> getLowStockReport(
+            @RequestParam(defaultValue = "") String search,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        Page<InventoryResponse> response =
+                inventoryService.searchLowStockReport(
+                        search.trim(),
+                        PageRequest.of(page, size)
+                );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Low-stock report retrieved successfully",
+                        response
+                )
+        );
     }
 }

@@ -1,5 +1,6 @@
 package com.smartbusiness.businessmanagement.dto.response;
 
+
 import com.smartbusiness.businessmanagement.entity.enums.PaymentMethod;
 
 import java.math.BigDecimal;
@@ -12,6 +13,7 @@ public record InvoiceResponse(
         Long orderId,
         String orderNumber,
         LocalDateTime issuedAt,
+        String cashierName,
         BigDecimal totalAmount,
         PaymentMethod paymentMethod,
         BigDecimal amountTendered,

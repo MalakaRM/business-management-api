@@ -1,6 +1,7 @@
 package com.smartbusiness.businessmanagement.api;
 
 import com.smartbusiness.businessmanagement.dto.response.ApiResponse;
+import com.smartbusiness.businessmanagement.dto.response.MonthlyAmountResponse;
 import com.smartbusiness.businessmanagement.dto.response.SalesReportResponse;
 import com.smartbusiness.businessmanagement.service.SalesReportService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/reports/sales")
@@ -33,6 +35,24 @@ public class SalesReportController {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Sales report retrieved successfully",
+                        response
+                )
+        );
+    }
+   // @PreAuthorize("hasAuthority('REPORT_READ')")
+    @GetMapping("/monthly")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<MonthlyAmountResponse>>> getMonthlySales(
+            @RequestParam LocalDate from,
+            @RequestParam LocalDate to
+    ) {
+
+        List<MonthlyAmountResponse> response =
+                salesReportService.getMonthlySales(from, to);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Monthly sales retrieved successfully",
                         response
                 )
         );

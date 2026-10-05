@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Service
@@ -388,4 +389,247 @@ public class OrderServiceImpl implements OrderService {
             orderRepository.save(order);
         }
     }
+    @Override
+    @Transactional
+    public OrderResponse updateOrder(
+            Long id,
+            OrderCreateRequest request
+    ) {
+
+        /*
+         * 1. Find existing order.
+         */
+        Order order =
+                orderRepository
+                        .findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Order not found with id: "
+                                                + id
+                                )
+                        );
+
+        /*
+         * 2. Only PENDING orders can be updated.
+         *
+         * CONFIRMED orders already affected inventory.
+         * CANCELLED orders are already closed.
+         */
+        if (order.getStatus() != OrderStatus.PENDING) {
+
+            throw new IllegalArgumentException(
+                    "Only PENDING orders can be updated"
+            );
+        }
+
+        /*
+         * 3. Resolve customer.
+         *
+         * Customer is optional because
+         * walk-in customers are allowed.
+         */
+        Customer customer = null;
+
+        if (request.customerId() != null) {
+
+            customer =
+                    customerRepository
+                            .findById(request.customerId())
+                            .orElseThrow(() ->
+                                    new ResourceNotFoundException(
+                                            "Customer not found with id: "
+                                                    + request.customerId()
+                                    )
+                            );
+
+            if (!customer.isActive()) {
+
+                throw new IllegalArgumentException(
+                        "Cannot update order with inactive customer"
+                );
+            }
+        }
+
+        /*
+         * 4. Resolve order number.
+         *
+         * If client does not provide one,
+         * keep the existing order number.
+         */
+        String orderNumber =
+                request.orderNumber();
+
+        if (orderNumber == null
+                || orderNumber.isBlank()) {
+
+            orderNumber =
+                    order.getOrderNumber();
+        }
+
+        /*
+         * 5. Check duplicate order number.
+         *
+         * Only reject if the new number belongs
+         * to another order.
+         */
+        if (!orderNumber.equals(
+                order.getOrderNumber()
+        )
+                && orderRepository.existsByOrderNumber(
+                orderNumber
+        )) {
+
+            throw new ResourceAlreadyExistsException(
+                    "Order number is already registered"
+            );
+        }
+
+        /*
+         * 6. Update basic order information.
+         */
+        order.setOrderNumber(orderNumber);
+        order.setCustomer(customer);
+        order.setOrderDate(request.orderDate());
+
+        /*
+         * 7. Replace existing order items.
+         *
+         * orphanRemoval = true in Order entity
+         * safely removes old OrderItem records.
+         */
+        order.getItems().clear();
+
+        BigDecimal totalAmount =
+                BigDecimal.ZERO;
+
+        /*
+         * 8. Resolve products and create
+         * new OrderItems.
+         */
+        for (OrderItemCreateRequest itemRequest :
+                request.items()) {
+
+            Product product =
+                    productRepository
+                            .findById(
+                                    itemRequest.productId()
+                            )
+                            .orElseThrow(() ->
+                                    new ResourceNotFoundException(
+                                            "Product not found with id: "
+                                                    + itemRequest.productId()
+                                    )
+                            );
+
+            if (!product.isActive()) {
+
+                throw new IllegalArgumentException(
+                        "Cannot order inactive product: "
+                                + product.getName()
+                );
+            }
+
+            OrderItem orderItem =
+                    orderMapper.toItemEntity(
+                            itemRequest,
+                            product,
+                            order
+                    );
+
+            order.getItems().add(orderItem);
+
+            totalAmount =
+                    totalAmount.add(
+                            orderItem.getSubtotal()
+                    );
+        }
+
+        /*
+         * 9. Backend calculates total.
+         */
+        order.setTotalAmount(totalAmount);
+
+        /*
+         * Status remains PENDING.
+         *
+         * Inventory is NOT changed here.
+         */
+        Order savedOrder =
+                orderRepository.save(order);
+
+        return orderMapper.toResponse(savedOrder);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> searchSalesReport(
+            LocalDate from,
+            LocalDate to,
+            String search,
+            Pageable pageable
+    ) {
+
+        String cleanSearch =
+                search == null ? "" : search.trim();
+
+        Page<Order> orders;
+
+        /*
+         * Case 1:
+         * Date range + search
+         */
+        if (from != null
+                && to != null
+                && !cleanSearch.isEmpty()) {
+
+            orders =
+                    orderRepository.searchSalesReportByDateAndSearch(
+                            from,
+                            to,
+                            cleanSearch,
+                            pageable
+                    );
+        }
+
+        /*
+         * Case 2:
+         * Date range only
+         */
+        else if (from != null
+                && to != null) {
+
+            orders =
+                    orderRepository.searchSalesReportByDate(
+                            from,
+                            to,
+                            pageable
+                    );
+        }
+
+        /*
+         * Case 3:
+         * Search only
+         */
+        else if (!cleanSearch.isEmpty()) {
+
+            orders =
+                    orderRepository.searchSalesReportBySearch(
+                            cleanSearch,
+                            pageable
+                    );
+        }
+
+        /*
+         * Case 4:
+         * No filters
+         */
+        else {
+
+            orders =
+                    orderRepository.findAll(pageable);
+        }
+
+        return orders.map(orderMapper::toResponse);
+    }
+
 }

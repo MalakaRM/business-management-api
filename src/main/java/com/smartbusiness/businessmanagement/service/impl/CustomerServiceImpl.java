@@ -58,7 +58,7 @@ public class CustomerServiceImpl implements CustomerService {
     ) {
 
         return customerRepository
-                .findAll(pageable)
+                .findAllByOrderByIdAsc(pageable)
                 .map(customerMapper::toResponse);
     }
 

@@ -14,6 +14,8 @@ import com.smartbusiness.businessmanagement.repository.OrderRepository;
 import com.smartbusiness.businessmanagement.repository.PaymentRepository;
 import com.smartbusiness.businessmanagement.service.InvoiceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -99,10 +101,11 @@ public class InvoiceServiceImpl
         return mapToResponse(invoice, payment);
     }
 
-    private InvoiceResponse mapToResponse(
-            Invoice invoice,
-            Payment payment
-    ) {
+    private InvoiceResponse mapToResponse(Invoice invoice, Payment payment) {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String cashierName = authentication.getName();
 
         Order order = invoice.getOrder();
 
@@ -125,6 +128,7 @@ public class InvoiceServiceImpl
                 order.getId(),
                 order.getOrderNumber(),
                 invoice.getIssuedAt(),
+                cashierName,
                 order.getTotalAmount(),
                 payment.getMethod(),
                 payment.getAmountTendered(),
@@ -132,4 +136,6 @@ public class InvoiceServiceImpl
                 items
         );
     }
+
+
 }

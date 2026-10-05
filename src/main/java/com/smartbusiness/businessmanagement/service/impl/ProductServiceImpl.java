@@ -15,6 +15,10 @@ import com.smartbusiness.businessmanagement.repository.StockMovementRepository;
 import com.smartbusiness.businessmanagement.service.AuditService;
 import com.smartbusiness.businessmanagement.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -143,5 +147,37 @@ public class ProductServiceImpl implements ProductService {
         );
 
         return productMapper.toResponse(savedProduct);
+    }
+
+    @Override
+    public Page<ProductResponse> getAllProducts(
+            int page,
+            int size
+    ) {
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(
+                        Sort.Direction.DESC,
+                        "id"
+                )
+        );
+
+        return productRepository
+                .findAllByOrderByIdAsc(pageable)
+                .map(productMapper::toResponse);
+    }
+    @Override
+    public ProductResponse getProductById(Long id) {
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Product not found with id: " + id
+                        )
+                );
+
+        return productMapper.toResponse(product);
     }
 }

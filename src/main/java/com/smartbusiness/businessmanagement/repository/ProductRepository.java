@@ -1,6 +1,8 @@
 package com.smartbusiness.businessmanagement.repository;
 
 import com.smartbusiness.businessmanagement.entity.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
@@ -11,4 +13,5 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     boolean existsBySku(String sku);
     long countByActiveTrue();
+    Page<Product> findAllByOrderByIdAsc(Pageable pageable);
 }

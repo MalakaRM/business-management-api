@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +24,7 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('CUSTOMER_CREATE')")
     public ResponseEntity<ApiResponse<CustomerResponse>>
     createCustomer(
             @Valid @RequestBody CustomerCreateRequest request
@@ -42,6 +44,7 @@ public class CustomerController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('CUSTOMER_READ')")
     public ResponseEntity<
             ApiResponse<Page<CustomerResponse>>
             >
@@ -68,6 +71,7 @@ public class CustomerController {
         );
     }
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('CUSTOMER_READ')")
     public ResponseEntity<ApiResponse<CustomerResponse>>
     getCustomerById(
             @PathVariable Long id
@@ -84,6 +88,8 @@ public class CustomerController {
         );
     }
 
+
+    @PreAuthorize("hasAuthority('CUSTOMER_READ')")
     @GetMapping("/active")
     public ResponseEntity<
             ApiResponse<Page<CustomerResponse>>
@@ -111,6 +117,7 @@ public class CustomerController {
         );
     }
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('CUSTOMER_UPDATE')")
     public ResponseEntity<ApiResponse<CustomerResponse>>
     updateCustomer(
             @PathVariable Long id,
@@ -132,6 +139,7 @@ public class CustomerController {
     }
 
     @PatchMapping("/{id}/deactivate")
+    @PreAuthorize("hasAuthority('CUSTOMER_UPDATE')")
     public ResponseEntity<ApiResponse<Void>>
     deactivateCustomer(
             @PathVariable Long id

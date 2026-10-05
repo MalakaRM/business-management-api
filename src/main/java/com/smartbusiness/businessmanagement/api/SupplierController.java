@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +23,7 @@ public class SupplierController {
 
     private final SupplierService supplierService;
 
+    @PreAuthorize("hasAuthority('SUPPLIER_CREATE')")
     @PostMapping
     public ResponseEntity<ApiResponse<SupplierResponse>> createSupplier(
             @Valid @RequestBody SupplierCreateRequest request
@@ -37,6 +39,7 @@ public class SupplierController {
                 );
     }
 
+    @PreAuthorize("hasAuthority('SUPPLIER_READ')")
     @GetMapping
     public ResponseEntity<ApiResponse<Page<SupplierResponse>>> getAllSuppliers(
             @PageableDefault(
@@ -58,6 +61,7 @@ public class SupplierController {
         );
     }
 
+    @PreAuthorize("hasAuthority('SUPPLIER_READ')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<SupplierResponse>> getSupplierById(
             @PathVariable Long id) {
@@ -70,6 +74,7 @@ public class SupplierController {
         );
     }
 
+    @PreAuthorize("hasAuthority('SUPPLIER_READ')")
     @GetMapping("/active")
     public ResponseEntity<ApiResponse<Page<SupplierResponse>>> getActiveSuppliers(
             @PageableDefault(
@@ -91,6 +96,7 @@ public class SupplierController {
         );
     }
 
+    @PreAuthorize("hasAuthority('SUPPLIER_UPDATE')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<SupplierResponse>>
     updateSupplier(
@@ -109,6 +115,7 @@ public class SupplierController {
         );
     }
 
+    @PreAuthorize("hasAuthority('SUPPLIER_UPDATE')")
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<ApiResponse<Void>> deactivateSupplier(@PathVariable Long id) {
         supplierService.deactivateSupplier(id);

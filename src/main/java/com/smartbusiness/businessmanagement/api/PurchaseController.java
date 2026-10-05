@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+
 @RestController
 @RequestMapping("/api/purchases")
 @RequiredArgsConstructor
@@ -82,7 +84,7 @@ public class PurchaseController {
                 )
         );
     }
-    @PreAuthorize("hasAuthority('PURCHASE_CREATE')")
+    @PreAuthorize("hasAuthority('PURCHASE_UPDATE')")
     @PatchMapping("/{id}/receive")
     public ResponseEntity<ApiResponse<PurchaseResponse>>
     receivePurchase(
@@ -95,6 +97,70 @@ public class PurchaseController {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Purchase received successfully",
+                        response
+                )
+        );
+    }
+    @PreAuthorize("hasAuthority('PURCHASE_DELETE')")
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<ApiResponse<PurchaseResponse>>
+    cancelPurchase(
+            @PathVariable Long id
+    ) {
+
+        PurchaseResponse response =
+                purchaseService.cancelPurchase(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Purchase cancelled successfully",
+                        response
+                )
+        );
+    }
+    @PreAuthorize("hasAuthority('PURCHASE_CREATE')")
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<PurchaseResponse>>
+    updatePurchase(
+            @PathVariable Long id,
+            @Valid @RequestBody PurchaseCreateRequest request
+    ) {
+
+        PurchaseResponse response =
+                purchaseService.updatePurchase(id, request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Purchase updated successfully",
+                        response
+                )
+        );
+    }
+    @PreAuthorize("hasAuthority('PURCHASE_READ')")
+    @GetMapping("/report/purchases")
+    public ResponseEntity<ApiResponse<Page<PurchaseResponse>>> getPurchaseReport(
+            @RequestParam(required = false) LocalDate from,
+            @RequestParam(required = false) LocalDate to,
+            @RequestParam(defaultValue = "") String search,
+            @PageableDefault(
+                    size = 20,
+                    sort = "purchaseDate",
+                    direction = Sort.Direction.DESC
+            )
+            Pageable pageable
+    ) {
+
+        Page<PurchaseResponse> response =
+                purchaseService.searchPurchaseReport(
+                        from,
+                        to,
+                        search.trim(),
+                        pageable
+                );
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Purchase report retrieved successfully",
                         response
                 )
         );

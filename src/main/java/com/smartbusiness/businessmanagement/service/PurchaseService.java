@@ -5,6 +5,8 @@ import com.smartbusiness.businessmanagement.dto.response.PurchaseResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
+
 public interface PurchaseService {
 
     PurchaseResponse createPurchase(
@@ -19,5 +21,13 @@ public interface PurchaseService {
     );
     PurchaseResponse receivePurchase(
             Long id
+    );
+    PurchaseResponse cancelPurchase(Long id);
+    PurchaseResponse updatePurchase(Long id, PurchaseCreateRequest request);
+    Page<PurchaseResponse> searchPurchaseReport(
+            LocalDate from,
+            LocalDate to,
+            String search,
+            Pageable pageable
     );
 }

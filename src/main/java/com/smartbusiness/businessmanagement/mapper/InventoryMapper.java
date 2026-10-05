@@ -6,13 +6,20 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class InventoryMapper {
-    public InventoryResponse toInventoryResponse(Inventory inventory) {
+
+    public InventoryResponse toInventoryResponse(
+            Inventory inventory
+    ) {
+
         return new InventoryResponse(
                 inventory.getId(),
                 inventory.getProduct().getId(),
                 inventory.getProduct().getName(),
+                inventory.getProduct().getSku(),
+                inventory.getProduct().getCategory().getName(),
                 inventory.getQuantity(),
                 inventory.getReorderLevel(),
+                inventory.getProduct().getPrice(),
                 inventory.getQuantity()
                         <= inventory.getReorderLevel(),
                 inventory.isActive()

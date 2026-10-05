@@ -3,14 +3,13 @@ package com.smartbusiness.businessmanagement.dto.response;
 import java.math.BigDecimal;
 
 public record DashboardResponse(
-        long totalProducts,
-        long totalCustomers,
-        long totalSuppliers,
-        long currentStock,
-        long lowStockCount,
-        long pendingOrders,
+        Long totalProducts,
+        Long totalCustomers,
+        Long totalSuppliers,
+        Long currentStock,
+        Long lowStockCount,
+        Long pendingOrders,
         BigDecimal todaySales,
-        BigDecimal todayPurchases,
         BigDecimal revenue
 ) {
 }

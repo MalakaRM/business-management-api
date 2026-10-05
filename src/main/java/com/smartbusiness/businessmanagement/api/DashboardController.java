@@ -17,7 +17,6 @@ public class DashboardController {
 
     private final DashboardService dashboardService;
 
-    @PreAuthorize("hasAuthority('REPORT_READ')")
     @GetMapping
     public ResponseEntity<ApiResponse<DashboardResponse>> getDashboard() {
 

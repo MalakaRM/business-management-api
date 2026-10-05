@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -209,5 +210,231 @@ public class PurchaseServiceImpl implements PurchaseService {
         return purchaseMapper.toResponse(
                 savedPurchase
         );
+    }
+    @Override
+    @Transactional
+    public PurchaseResponse cancelPurchase(Long id) {
+
+        Purchase purchase =
+                purchaseRepository.findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Purchase not found with id: "
+                                                + id
+                                )
+                        );
+
+        // Only DRAFT purchases can be cancelled
+        if (purchase.getStatus() != PurchaseStatus.DRAFT) {
+
+            throw new IllegalArgumentException(
+                    "Only DRAFT purchases can be cancelled"
+            );
+        }
+
+        // Change purchase status
+        purchase.setStatus(PurchaseStatus.CANCELLED);
+
+        Purchase savedPurchase =
+                purchaseRepository.save(purchase);
+
+        // Audit log
+        auditService.log(
+                AuditAction.PURCHASE,
+                "Purchase",
+                savedPurchase.getId().toString(),
+                "Cancelled purchase: "
+                        + savedPurchase.getReferenceNumber()
+        );
+
+        return purchaseMapper.toResponse(
+                savedPurchase
+        );
+    }
+    @Override
+    @Transactional
+    public PurchaseResponse updatePurchase(
+            Long id,
+            PurchaseCreateRequest request
+    ) {
+
+        Purchase purchase =
+                purchaseRepository.findById(id)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Purchase not found with id: "
+                                                + id
+                                )
+                        );
+
+        // Only DRAFT purchases can be updated
+        if (purchase.getStatus() != PurchaseStatus.DRAFT) {
+
+            throw new IllegalArgumentException(
+                    "Only DRAFT purchases can be updated"
+            );
+        }
+
+        // Check duplicate reference number
+        if (!purchase.getReferenceNumber()
+                .equals(request.referenceNumber())
+                && purchaseRepository.existsByReferenceNumber(
+                request.referenceNumber()
+        )) {
+
+            throw new ResourceAlreadyExistsException(
+                    "Purchase reference number is already registered"
+            );
+        }
+
+        // Find supplier
+        Supplier supplier =
+                supplierRepository.findById(request.supplierId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Supplier not found with id: "
+                                                + request.supplierId()
+                                )
+                        );
+
+        // Supplier must be active
+        if (!supplier.isActive()) {
+
+            throw new IllegalArgumentException(
+                    "Cannot update purchase with inactive supplier"
+            );
+        }
+
+        // Update basic purchase information
+        purchase.setReferenceNumber(
+                request.referenceNumber()
+        );
+
+        purchase.setSupplier(supplier);
+
+        purchase.setPurchaseDate(
+                request.purchaseDate()
+        );
+
+        purchase.setNotes(
+                request.notes()
+        );
+
+        // Remove existing items
+        purchase.getItems().clear();
+
+        BigDecimal totalAmount = BigDecimal.ZERO;
+
+        // Add updated items
+        for (PurchaseItemRequest itemRequest : request.items()) {
+
+            Product product =
+                    productRepository.findById(
+                                    itemRequest.productId()
+                            )
+                            .orElseThrow(() ->
+                                    new ResourceNotFoundException(
+                                            "Product not found with id: "
+                                                    + itemRequest.productId()
+                                    )
+                            );
+
+            if (!product.isActive()) {
+
+                throw new IllegalArgumentException(
+                        "Cannot purchase inactive product: "
+                                + product.getName()
+                );
+            }
+
+            PurchaseItem purchaseItem =
+                    purchaseMapper.toItemEntity(
+                            itemRequest,
+                            product,
+                            purchase
+                    );
+
+            purchase.getItems().add(
+                    purchaseItem
+            );
+
+            totalAmount =
+                    totalAmount.add(
+                            purchaseItem.getSubtotal()
+                    );
+        }
+
+        // Update calculated total
+        purchase.setTotalAmount(
+                totalAmount
+        );
+
+        Purchase savedPurchase =
+                purchaseRepository.save(purchase);
+
+        // Audit log
+        auditService.log(
+                AuditAction.PURCHASE,
+                "Purchase",
+                savedPurchase.getId().toString(),
+                "Updated purchase: "
+                        + savedPurchase.getReferenceNumber()
+        );
+
+        return purchaseMapper.toResponse(
+                savedPurchase
+        );
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PurchaseResponse> searchPurchaseReport(
+            LocalDate from,
+            LocalDate to,
+            String search,
+            Pageable pageable
+    ) {
+
+        String cleanSearch =
+                search == null ? "" : search.trim();
+
+        Page<Purchase> purchases;
+
+        if (from != null
+                && to != null
+                && !cleanSearch.isEmpty()) {
+
+            purchases =
+                    purchaseRepository.searchPurchaseReportByDateAndSearch(
+                            from,
+                            to,
+                            cleanSearch,
+                            pageable
+                    );
+        }
+        else if (from != null
+                && to != null) {
+
+            purchases =
+                    purchaseRepository.searchPurchaseReportByDate(
+                            from,
+                            to,
+                            pageable
+                    );
+        }
+        else if (!cleanSearch.isEmpty()) {
+
+            purchases =
+                    purchaseRepository.searchPurchaseReportBySearch(
+                            cleanSearch,
+                            pageable
+                    );
+        }
+        else {
+
+            purchases =
+                    purchaseRepository.findAll(pageable);
+        }
+
+        return purchases.map(purchaseMapper::toResponse);
     }
 }

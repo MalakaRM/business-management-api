@@ -20,6 +20,9 @@ import com.smartbusiness.businessmanagement.repository.StockMovementRepository;
 import com.smartbusiness.businessmanagement.service.AuditService;
 import com.smartbusiness.businessmanagement.service.InventoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -266,6 +269,16 @@ public class InventoryServiceImpl implements InventoryService {
         }
     }
 
+    @Override
+    public Page<InventoryResponse> getAllInventory(int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        return inventoryRepository
+                .findAllByOrderByIdAsc(pageable)
+                .map(inventoryMapper::toInventoryResponse);
+    }
+
 
     @Override
     @Transactional
@@ -372,4 +385,70 @@ public class InventoryServiceImpl implements InventoryService {
                 movement.getCreatedAt()
         );
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<InventoryResponse> searchInventoryReport(
+            String search,
+            Pageable pageable
+    ) {
+
+        String cleanSearch =
+                search == null ? "" : search.trim();
+
+        Page<Inventory> inventories;
+
+        if (!cleanSearch.isEmpty()) {
+
+            inventories =
+                    inventoryRepository.searchInventoryReport(
+                            cleanSearch,
+                            pageable
+                    );
+
+        } else {
+
+            inventories =
+                    inventoryRepository.findAllByOrderByIdAsc(
+                            pageable
+                    );
+        }
+
+        return inventories.map(
+                inventoryMapper::toInventoryResponse
+        );
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public Page<InventoryResponse> searchLowStockReport(
+            String search,
+            Pageable pageable
+    ) {
+
+        String cleanSearch =
+                search == null ? "" : search.trim();
+
+        Page<Inventory> inventories;
+
+        if (!cleanSearch.isEmpty()) {
+
+            inventories =
+                    inventoryRepository.searchLowStockReport(
+                            cleanSearch,
+                            pageable
+                    );
+
+        } else {
+
+            inventories =
+                    inventoryRepository.findLowStockReport(
+                            pageable
+                    );
+        }
+
+        return inventories.map(
+                inventoryMapper::toInventoryResponse
+        );
+    }
+
 }

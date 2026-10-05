@@ -14,4 +14,5 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
     boolean existsByName(String name);
     Page<Supplier> findByActiveTrue(Pageable pageable);
     long countByActiveTrue();
+    Page<Supplier> findAllByOrderByIdAsc(Pageable pageable);
 }

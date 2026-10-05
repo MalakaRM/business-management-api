@@ -16,4 +16,5 @@ public interface CustomerRepository
 
     Page<Customer> findByActiveTrue(Pageable pageable);
     long countByActiveTrue();
+    Page<Customer> findAllByOrderByIdAsc(Pageable pageable);
 }

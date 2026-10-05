@@ -68,6 +68,15 @@ public class DataInitializer implements CommandLineRunner {
                 "ORDER_READ",
                 "View orders"
         );
+        Permission orderUpdate = createPermission(
+                "ORDER_UPDATE",
+                "Update and confirm orders"
+        );
+
+        Permission orderDelete = createPermission(
+                "ORDER_DELETE",
+                "Cancel orders"
+        );
 
         Permission reportRead = createPermission(
                 "REPORT_READ",
@@ -82,6 +91,15 @@ public class DataInitializer implements CommandLineRunner {
         Permission purchaseRead = createPermission(
                 "PURCHASE_READ",
                 "View purchase records"
+        );
+        Permission purchaseUpdate = createPermission(
+                "PURCHASE_UPDATE",
+                "Update purchase records"
+        );
+
+        Permission purchaseDelete = createPermission(
+                "PURCHASE_DELETE",
+                "Cancel purchase records"
         );
 
         Permission auditRead = createPermission(
@@ -102,6 +120,39 @@ public class DataInitializer implements CommandLineRunner {
                 "CUSTOMER_UPDATE",
                 "Update customers"
         );
+        Permission roleManage = createPermission(
+                "ROLE_MANAGE",
+                "Manage system roles and permissions"
+        );
+        Permission categoryCreate = createPermission(
+                "CATEGORY_CREATE",
+                "Create categories"
+        );
+
+        Permission categoryRead = createPermission(
+                "CATEGORY_READ",
+                "View categories"
+        );
+
+        Permission categoryUpdate = createPermission(
+                "CATEGORY_UPDATE",
+                "Update and deactivate categories"
+        );
+        Permission supplierCreate = createPermission(
+                "SUPPLIER_CREATE",
+                "Create suppliers"
+        );
+
+        Permission supplierRead = createPermission(
+                "SUPPLIER_READ",
+                "View suppliers"
+        );
+
+        Permission supplierUpdate = createPermission(
+                "SUPPLIER_UPDATE",
+                "Update and deactivate suppliers"
+        );
+
 
         // =========================
         // Roles
@@ -119,13 +170,25 @@ public class DataInitializer implements CommandLineRunner {
                         inventoryUpdate,
                         orderCreate,
                         orderRead,
+                        orderUpdate,
+                        orderDelete,
                         reportRead,
                         purchaseCreate,
                         purchaseRead,
+                        purchaseUpdate,
+                        purchaseDelete,
                         auditRead,
                         customerCreate,
                         customerRead,
-                        customerUpdate
+                        customerUpdate,
+                        roleManage,
+                        categoryCreate,
+                        categoryRead,
+                        categoryUpdate,
+                        supplierCreate,
+                        supplierRead,
+                        supplierUpdate
+
 
                 )
         );
@@ -146,7 +209,12 @@ public class DataInitializer implements CommandLineRunner {
                         auditRead,
                         customerCreate,
                         customerRead,
-                        customerUpdate
+                        customerUpdate,
+                        purchaseUpdate,
+                        purchaseDelete,
+                        supplierCreate,
+                        supplierRead,
+                        supplierUpdate
                 )
         );
 
@@ -224,6 +292,7 @@ public class DataInitializer implements CommandLineRunner {
                         passwordEncoder.encode("Admin@123")
                 )
                 .enabled(true)
+                .passwordChangeRequired(false)
                 .roles(Set.of(adminRole))
                 .build();
 

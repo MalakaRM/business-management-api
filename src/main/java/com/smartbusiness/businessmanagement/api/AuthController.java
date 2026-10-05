@@ -1,8 +1,10 @@
 package com.smartbusiness.businessmanagement.api;
 
+import com.smartbusiness.businessmanagement.dto.request.ChangePasswordRequest;
 import com.smartbusiness.businessmanagement.dto.request.LoginRequest;
 import com.smartbusiness.businessmanagement.dto.request.RegisterRequest;
 import com.smartbusiness.businessmanagement.dto.response.ApiResponse;
+import com.smartbusiness.businessmanagement.dto.response.ChangePasswordResponse;
 import com.smartbusiness.businessmanagement.dto.response.LoginResponse;
 import com.smartbusiness.businessmanagement.dto.response.RegisterResponse;
 import com.smartbusiness.businessmanagement.service.AuthService;
@@ -48,5 +50,19 @@ public class AuthController {
                                 response
                         )
                 );
+    }
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<ChangePasswordResponse>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request
+    ) {
+        ChangePasswordResponse response =
+                authService.changePassword(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Password changed successfully",
+                        response
+                )
+        );
     }
 }
