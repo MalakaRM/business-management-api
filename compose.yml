@@ -26,5 +26,13 @@ services:
     depends_on:
       - postgres
 
+  frontend:
+    build: ../../frontend/business-management-ui
+    container_name: smart-business-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
 volumes:
   postgres_data:
